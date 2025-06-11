@@ -3,8 +3,15 @@ import time
 from collections import deque
 import heapq
 
+st.markdown("# Pathfinding Visualizer")
+st.markdown("Click cells to toggle walls 🧱 or set start/end points. Then run an algorithm!")
 
-ROWS, COLS = 4, 4
+st.markdown("""
+**Legend**  
+🟩 Start | 🟥 End | ⬛ Wall | 🟨 Visited | 🔵 Path | ⬜ Empty
+""")
+
+ROWS, COLS = 7, 7
 
 #Initializing the grid
 if 'grid' not in st.session_state:
@@ -27,50 +34,42 @@ def reset_path():
 
 
 st.title("Path Finding Visualizer")
-mode = st.radio(
-    "Select Mode", 
-    ["Wall", "Set Start", "Set End"], key = "mode"
-)
 
+## Grid Display
+with st.sidebar:
+    st.header("Controls")
+    mode = st.radio("Mode", ["Wall", "Set Start", "Set End"], key="mode")
+    speed = st.slider("⏱️ Animation Speed", 0.001, 0.1, 0.02)
+
+def get_cell_emoji(r, c):
+    if (r, c) == st.session_state['start']:
+        return "🟩"  
+    elif (r, c) == st.session_state['end']:
+        return "🟥"  
+    elif st.session_state.grid[r][c] == 1:
+        return "⬛"  
+    elif st.session_state.grid[r][c] == 2:
+        return "🟨"  
+    elif st.session_state.grid[r][c] == 3:
+        return "🔵"  
+    else:
+        return "⬜"  
 
 for r in range(ROWS):
     cols = st.columns(COLS)
     for c in range(COLS):
-        cell_val = st.session_state.grid[r][c]
-        cell_label = ""
-
-
-        if (r, c) == st.session_state['start']:
-            cell_label = 'S'
-        
-        elif (r, c) == st.session_state['end']:
-            cell_label = 'E'
-
-        elif cell_val == 1:
-            cell_label = 'W'
-        
-        elif cell_val == 2:
-            cell_label = '.'
-        
-        elif cell_val == 3:
-            cell_label = '◉'
-        else :
-            cell_label = ' '
-
-
-        if cols[c].button(cell_label, key = f'cell_{r}_{c}'):
+        cell_label = get_cell_emoji(r, c)
+        if cols[c].button(cell_label, key=f'cell_{r}_{c}'):
             if mode == 'Wall':
                 if (r, c) != st.session_state['start'] and (r, c) != st.session_state['end']:
-                    st.session_state.grid[r][c] = 0 if cell_val == 1 else 1
+                    st.session_state.grid[r][c] = 0 if st.session_state.grid[r][c] == 1 else 1
             elif mode == 'Set Start':
                 if (r, c) != st.session_state['end']:
-                    st.session_state['start']= (r, c)
+                    st.session_state['start'] = (r, c)
             elif mode == 'Set End':
                 if (r, c) != st.session_state['start']:
                     st.session_state['end'] = (r, c)
             st.rerun()
-        
-
 
 ##BFS
 def bfs():
@@ -101,7 +100,7 @@ def bfs():
                     st.session_state['bfs_found'] = True
                     st.rerun()
                     return 
-        time.sleep(0.005)
+        time.sleep(speed)
         st.rerun()
 
 
@@ -122,7 +121,7 @@ def bfs():
 
         for r, c in reversed(path):
             st.session_state.grid[r][c] = 3
-            time.sleep(0.05)
+            time.sleep(speed)
 
         st.session_state['bfs_mode'] = None
         st.rerun()
@@ -173,7 +172,7 @@ def dfs():
                     st.rerun()
                     return 
                 
-        time.sleep(0.005)
+        time.sleep(speed)
         st.rerun()
 
     elif st.session_state['dfs_mode'] == 'backtrack' and st.session_state['dfs_found'] :
@@ -188,7 +187,7 @@ def dfs():
 
         for r, c in reversed(path):
             st.session_state.grid[r][c] = 3
-            time.sleep(0.05)
+            time.sleep(speed)
         st.session_state['dfs_mode'] = None
         st.rerun()
 
@@ -238,7 +237,7 @@ def dijkstra():
                         st.rerun()
                         return 
                     
-        time.sleep(0.005)
+        time.sleep(speed)
         st.rerun()
 
     elif st.session_state['dij_mode'] == 'backtrack' and st.session_state['dij_found']:
@@ -252,7 +251,7 @@ def dijkstra():
                 path.append((r, c))
         for r, c in reversed(path):
             st.session_state.grid[r][c] = 3
-            time.sleep(0.005)
+            time.sleep(speed)
         st.session_state['dij_mode'] = None
         st.rerun()
 
@@ -307,7 +306,7 @@ def astar():
                         st.rerun()
                         return
 
-        time.sleep(0.005)
+        time.sleep(speed)
         st.rerun()
 
     elif st.session_state['astar_mode'] == 'backtrack' and st.session_state['astar_found']:
@@ -321,7 +320,7 @@ def astar():
                 path.append((r, c))
         for r, c in reversed(path):
             st.session_state.grid[r][c] = 3
-            time.sleep(0.005)
+            time.sleep(speed)
         st.session_state['astar_mode'] = None
         st.rerun()
 
