@@ -271,6 +271,73 @@ if st.button("Run Dijkstra"):
 if 'dij_mode' in st.session_state and st.session_state['dij_mode']:
     dijkstra()
 
+
+## A- Star
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+def astar():
+    pq = st.session_state['astar_pq']
+    g_cost = st.session_state['astar_g']
+    parent = st.session_state['astar_parent']
+    end = st.session_state['end']
+
+    if st.session_state['astar_mode'] == 'search':
+        if not pq:
+            st.session_state['astar_mode'] = None
+            return
+        
+        f, g, r, c = heapq.heappop(pq)
+
+        if (r, c) != st.session_state['start'] and (r, c) != end:
+            st.session_state.grid[r][c] = 3
+
+        for dr, dc in [(0,1), (1, 0), (0, -1), (-1, 0)]:
+            x, y = r + dr, c + dc
+            if 0 <= x < ROWS and 0 <= y < COLS and st.session_state.grid[x][y] != 1:
+                new_g = g + 1
+                if new_g < g_cost[x][y]:
+                    g_cost[x][y] = new_g
+                    f_score = new_g + heuristic((x, y), end)
+                    parent[x][y] = (r, c)
+                    heapq.heappush(pq, (f_score, new_g, x, y))
+                    if (x, y) == end:
+                        st.session_state['astar_mode'] = 'backtrack'
+                        st.session_state['astar_found'] = True
+                        st.rerun()
+                        return
+
+        time.sleep(0.005)
+        st.rerun()
+
+    elif st.session_state['astar_mode'] == 'backtrack' and st.session_state['astar_found']:
+        r, c = end
+        path = []
+        while (r, c) != st.session_state['start']:
+            if parent[r][c] is None:
+                break
+            r,c = parent[r][c]
+            if (r, c) != st.session_state['start']:
+                path.append((r, c))
+        for r, c in reversed(path):
+            st.session_state.grid[r][c] = 3
+            time.sleep(0.005)
+        st.session_state['astar_mode'] = None
+        st.rerun()
+
+if st.button("Run A*"):
+    reset_path()
+    st.session_state['astar_pq'] = [(0 + heuristic(st.session_state["start"], st.session_state["end"]), 0, *st.session_state["start"])]
+    st.session_state['astar_g'] = [[float("inf")] * COLS for _ in range(ROWS)]
+    st.session_state['astar_g'][st.session_state["start"][0]][st.session_state["start"][1]] = 0
+    st.session_state['astar_parent'] = [[None] * COLS for _ in range(ROWS)]
+    st.session_state['astar_mode'] = 'search'
+    st.session_state['astar_found'] = False
+    st.rerun()
+
+if 'astar_mode' in st.session_state and st.session_state['astar_mode']:
+    astar()
+
 if st.button("Reset Grid"):
     st.session_state.grid = [[0]*COLS for _ in range(ROWS)]
     st.session_state['start'] = (0, 0)
