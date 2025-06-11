@@ -1,6 +1,8 @@
 import streamlit as st
 import time 
 from collections import deque
+import heapq
+
 
 ROWS, COLS = 4, 4
 
@@ -206,6 +208,68 @@ if 'dfs_mode' in st.session_state and st.session_state['dfs_mode']:
 
 
 
+## Dijstras
+def dijkstra():
+    pq = st.session_state['dij_pq']
+    distance = st.session_state['dij_dis']
+    parent = st.session_state['dij_parent']
+    end = st.session_state['end']
+
+    if st.session_state['dij_mode'] == 'search':
+        if not pq:
+            st.session_state['dij_mode'] = None
+            return 
+        dist, r, c = heapq.heappop(pq)
+
+        if (r, c) != st.session_state['start'] and (r, c) != end:
+            st.session_state.grid[r][c] = 2
+
+        for dr, dc in  [(0,1), (1, 0), (0, -1),(-1,0)]:
+            x, y = r + dr, c + dc
+            if 0 <= x < ROWS and 0 <= y < COLS and st.session_state.grid[x][y] != 1:
+                new_dist = dist + 1
+                if new_dist < distance[x][y]:
+                    distance[x][y] = new_dist
+                    parent[x][y] = (r, c)
+                    heapq.heappush(pq, (new_dist, x, y))
+                    if(x, y) == end:
+                        st.session_state['dij_mode'] = 'backtrack'
+                        st.session_state['dij_found'] = True
+                        st.rerun()
+                        return 
+                    
+        time.sleep(0.005)
+        st.rerun()
+
+    elif st.session_state['dij_mode'] == 'backtrack' and st.session_state['dij_found']:
+        r, c = end
+        path = []
+        while(r, c) != st.session_state['start']:
+            if parent[r][c] is None:
+                break
+            r, c = parent[r][c]
+            if (r, c) != st.session_state['start']:
+                path.append((r, c))
+        for r, c in reversed(path):
+            st.session_state.grid[r][c] = 3
+            time.sleep(0.005)
+        st.session_state['dij_mode'] = None
+        st.rerun()
+
+
+if st.button("Run Dijkstra"):
+    reset_path()
+    st.session_state["dij_pq"] = [(0, *st.session_state["start"])]
+    st.session_state["dij_dis"] = [[float("inf")] * COLS for _ in range(ROWS)]
+    st.session_state["dij_dis"][st.session_state["start"][0]][st.session_state["start"][1]] = 0
+    st.session_state["dij_parent"] = [[None] * COLS for _ in range(ROWS)]
+    st.session_state["dij_mode"] = "search"
+    st.session_state["dij_found"] = False
+    st.rerun()
+
+
+if 'dij_mode' in st.session_state and st.session_state['dij_mode']:
+    dijkstra()
 
 if st.button("Reset Grid"):
     st.session_state.grid = [[0]*COLS for _ in range(ROWS)]
