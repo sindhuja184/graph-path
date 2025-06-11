@@ -70,7 +70,7 @@ for r in range(ROWS):
         
 
 
-
+##BFS
 def bfs():
     q = st.session_state["bfs_queue"]
     visited = st.session_state["bfs_visited"]
@@ -126,6 +126,7 @@ def bfs():
         st.rerun()
 
 
+
 if st.button("Run BFS"):
     reset_path()
     st.session_state['bfs_queue'] = deque([st.session_state['start']])
@@ -138,6 +139,72 @@ if st.button("Run BFS"):
 
 if 'bfs_mode' in st.session_state and st.session_state.bfs_mode:
     bfs()
+
+
+##DFS 
+def dfs():
+    stack = st.session_state["dfs_stack"]
+    visited = st.session_state["dfs_visited"]
+    parent = st.session_state["dfs_parent"]
+    end = st.session_state['end']
+
+
+    if st.session_state["dfs_mode"] == 'search':
+        if not stack:
+            st.session_state['dfs_mode'] = None
+            return 
+        
+        r, c = stack.pop()
+
+        if(r, c) != st.session_state['start'] and (r, c) != end:
+            st.session_state.grid[r][c] = 2
+
+        for dr, dc in [(0,1), (1,0), (0,-1),(-1,0)]:
+            x, y = r + dr, c + dc
+            if 0 <= x < ROWS and 0 <= y < COLS and not visited[x][y] and st.session_state.grid[x][y] != 1:
+                visited[x][y] = True
+                parent[x][y] = (r, c)
+                stack.append((x, y))
+                if(x, y) == end:
+                    st.session_state['dfs_mode'] = 'backtrack'
+                    st.session_state['dfs_found'] = True
+                    st.rerun()
+                    return 
+                
+        time.sleep(0.005)
+        st.rerun()
+
+    elif st.session_state['dfs_mode'] == 'backtrack' and st.session_state['dfs_found'] :
+        r, c = end
+        path = []
+        while (r, c) != st.session_state['start']:
+            if parent[r][c] == None:
+                break
+            r, c = parent[r][c]
+            if (r, c) != st.session_state['start']:
+                path.append((r, c))
+
+        for r, c in reversed(path):
+            st.session_state.grid[r][c] = 3
+            time.sleep(0.05)
+        st.session_state['dfs_mode'] = None
+        st.rerun()
+
+
+if st.button("Run DFS"):
+    reset_path()
+    st.session_state['dfs_stack'] = [st.session_state['start']]
+    st.session_state['dfs_visited'] = [[False] * COLS for _ in range(ROWS)]
+    st.session_state['dfs_visited'][st.session_state['start'][0]][st.session_state['start'][1]] = True
+    st.session_state['dfs_mode'] = 'search'
+    st.session_state["dfs_parent"] = [[None]*COLS for _ in range(ROWS)]
+    st.session_state['dfs_found'] = False
+    st.rerun()
+
+if 'dfs_mode' in st.session_state and st.session_state['dfs_mode']:
+    dfs()
+
+
 
 
 if st.button("Reset Grid"):
