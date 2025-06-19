@@ -5,9 +5,9 @@ An interactive web-based tool built with Streamlit that visualizes popular pathf
 
 ## Demo 
 
-Check the demo of UI 
-![alt text](image.png)
+Check the demo of UI ![alt text](image.png)
 
+Click [here](https://graph-path.streamlit.app/) to use streamlit app.
 ## Features
 - Build custom mazes using Wall Mode
 
